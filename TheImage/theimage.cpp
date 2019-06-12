@@ -363,7 +363,7 @@ RLEtable *TheImage::BuildRLE(int threshold)
                             ChangeNodetar(tmpblob->nextnode, 2, tmpnode2->parenode->Index, NULL);
                             ChangeNodetar(Blob, 3, tmpnode2->Index, tmpblob->Ypos);
                             tmpblob->nextnode = NULL;
-                            DeleteBlobNode(tmpblob);
+                            DeleteBlobNode(tmpblob, 0);
                             tmpnode1->nextnode = tmpnode2;
                             tmpnode2->parenode = tmpnode1;
                         }
@@ -397,9 +397,9 @@ RLEtable *TheImage::BuildRLE(int threshold)
     }// end height
 
     if(parentcol != NULL)
-        delete parentcol;
+        CleanNode(parentcol);
     if(currcol != NULL)
-        delete currcol;
+        CleanNode(currcol);
 
     return Blob;
 }
@@ -467,107 +467,136 @@ void TheImage::ChangeNodetar(RLEtable *curr, int item, int val, int val2)
     }
 }
 
-void TheImage::DeleteBlobNode(RLEtable *blobtar)
+void TheImage::DeleteBlobNode(RLEtable *blobtar, int mode)
 {
-    RLEtable *prenode = blobtar->preside;
-    prenode->beside = blobtar->beside;
-    if(blobtar->beside != NULL)
-        blobtar->beside->preside = prenode;
-    delete blobtar;
+    if(mode == 0)
+    {
+        RLEtable *prenode = blobtar->preside;
+        prenode->beside = blobtar->beside;
+        if(blobtar->beside != NULL)
+            blobtar->beside->preside = prenode;
+        CleanNode(blobtar);
+    }
+    else
+    {
+        RLEtable *prenode = blobtar->parenode;
+        prenode->nextnode = blobtar->nextnode;
+        if(blobtar->nextnode != NULL)
+            blobtar->nextnode->parenode = prenode;
+        CleanNode(blobtar);
+    }
 }
 
 ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
 {
-    RLEtable *tmpnode1, *tmpnode2, *tmpnode3;
+    RLEtable *tmp1, *tmp2;
     int xmin=0, xmax=0, ymin=0, ymax=0;
-    //double xsum =0.0, ysum=0.0;
     ItemInfo *itmnode, *tmpitmnode;
     itmnode = new ItemInfo{{{0,0},{0,0},{0,0},{0,0}}, 0, 0.0, NULL};
-    //nitITM(itmnode);
     tmpitmnode = itmnode;
 
     bool initflag = true;
-    tmpnode1 = blob;
-    tmpnode2 = blob->beside;
+    tmp1 = blob->beside;
 
-    while(tmpnode2 != NULL)
+    while(tmp1 != NULL)
     {
-        if(tmpnode2->Ypos < filtersize)
+        if(tmp1->Ypos < filtersize)
         {
-            DeleteBlobNode(tmpnode2);
-            tmpnode2 = tmpnode1->beside;
+            while(tmp1->nextnode != NULL)
+            {
+                tmp2 = tmp1->nextnode;
+                DeleteBlobNode(tmp2, 1);
+            }
+            DeleteBlobNode(tmp2, 0);
+            tmp1 = blob->beside;
         }
         else
         {
-            tmpnode3 = tmpnode2->nextnode;
-            while(tmpnode3 != NULL)
+            tmp2 = tmp1->nextnode;
+            while(tmp2 != NULL)
             {
                 if(initflag)
                 {
                     ItemInfo *newitm = new ItemInfo{{{0,0},{0,0},{0,0},{0,0}}, 0, 0.0, NULL};
-                    //InitITM(newitm);
                     tmpitmnode->next = newitm;
                     itmnode->targetNum += 1;
                     tmpitmnode = tmpitmnode->next;
                     initflag = false;
 
-                    xmin = tmpnode3->Xstart;
-                    xmax = tmpnode3->Xend;
-                    ymin = tmpnode3->Ypos;
-                    ymax = tmpnode3->Ypos;
+                    xmin = tmp2->Xstart;
+                    xmax = tmp2->Xend;
+                    ymin = tmp2->Ypos;
+                    ymax = tmp2->Ypos;
                 }
 
-                if(xmin > tmpnode3->Xstart)
+                if(xmin > tmp2->Xstart)
                 {
-                    xmin = tmpnode3->Xstart;
-                    tmpitmnode->points[0].x = tmpnode3->Xstart;
-                    tmpitmnode->points[0].y = tmpnode3->Ypos;
+                    xmin = tmp2->Xstart;
+                    tmpitmnode->points[0].x = tmp2->Xstart;
+                    tmpitmnode->points[0].y = tmp2->Ypos;
                 }
 
-                if(xmax < tmpnode3->Xend)
+                if(xmax < tmp2->Xend)
                 {
-                    xmax = tmpnode3->Xend;
-                    tmpitmnode->points[1].x = tmpnode3->Xend;
-                    tmpitmnode->points[1].y = tmpnode3->Ypos;
+                    xmax = tmp2->Xend;
+                    tmpitmnode->points[1].x = tmp2->Xend;
+                    tmpitmnode->points[1].y = tmp2->Ypos;
                 }
 
-                if(ymin > tmpnode3->Ypos)
+                if(ymin > tmp2->Ypos)
                 {
-                    ymin = tmpnode3->Ypos;
-                    tmpitmnode->points[2].x = (tmpnode3->Xstart + tmpnode3->Xend)/2;
-                    tmpitmnode->points[2].y = tmpnode3->Ypos;
+                    ymin = tmp2->Ypos;
+                    tmpitmnode->points[2].x = (tmp2->Xstart + tmp2->Xend)/2;
+                    tmpitmnode->points[2].y = tmp2->Ypos;
                 }
 
-                if(ymax < tmpnode3->Ypos)
+                if(ymax < tmp2->Ypos)
                 {
-                    ymax = tmpnode3->Ypos;
-                    tmpitmnode->points[3].x = (tmpnode3->Xstart + tmpnode3->Xend)/2;
-                    tmpitmnode->points[3].y = tmpnode3->Ypos;
+                    ymax = tmp2->Ypos;
+                    tmpitmnode->points[3].x = (tmp2->Xstart + tmp2->Xend)/2;
+                    tmpitmnode->points[3].y = tmp2->Ypos;
                 }
 
-                //xsum = ((tmpnode3->Xstart + tmpnode3->Xend)/m_width_)*(tmpnode3->Xend - tmpnode3->Xstart + 1)/2 + xsum;
-                //ysum = (tmpnode3->Xend - tmpnode3->Xstart + 1)*((tmpnode3->Ypos)/m_height_) + ysum;
-
-                tmpnode3 = tmpnode3->nextnode;
+                DeleteBlobNode(tmp2, 1);
+                tmp2 = tmp1->nextnode;
             }
 
-            // xsum process
-            // ysum process
-            // tmpitemnode->theta process
-            DeleteBlobNode(tmpnode2);
-            tmpnode2 = tmpnode1->beside;
+            DeleteBlobNode(tmp1, 0);
+            tmp1 = blob->beside;
         } // end search for 1 blob node
 
-        //Initialize
-        //xsum = 0.0;
-        //ysum = 0.0;
         initflag = true;
     }// end search for all
 
     if(blob != NULL)
-        delete blob;
+        CleanNode(blob);
+
     return itmnode;
 }
+
+void TheImage::CleanNode(RLEtable *tar)
+{
+    tar->beside = NULL;
+    tar->preside = NULL;
+    tar->parenode = NULL;
+    tar->nextnode = NULL;
+    delete tar;
+}
+
+void TheImage::CleanItem(ItemInfo *theITM)
+{
+    ItemInfo *pre = theITM->next;
+    while(pre != NULL)
+    {
+        theITM->next = pre->next;
+        pre->next = NULL;
+        delete pre;
+        pre = theITM->next;
+    }
+    if(theITM != NULL)
+        delete theITM;
+}
+
 /*
 void TheImage::InitITM(ItemInfo *ITM)
 {

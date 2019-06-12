@@ -42,8 +42,10 @@ public:
     RLEtable *BuildRLE(int threshold);
     RLEtable *FindNodeHead(RLEtable *curr, int mode, int pos);
     void ChangeNodetar(RLEtable *curr, int item, int val, int val2);
-    void DeleteBlobNode(RLEtable *blobtar);
+    void DeleteBlobNode(RLEtable *blobtar, int mode);
     ItemInfo *GetInfoFromBlob(RLEtable *blob, int filtersize);
+    void CleanNode(RLEtable *tar);
+    void CleanItem(ItemInfo *theITM);
     //void InitITM(ItemInfo *ITM);
 };
 
