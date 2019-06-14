@@ -269,7 +269,7 @@ int TheImage::CopyRaw(unsigned char *sourceraw,int tarsized,int wid, int hei)
     return 0;
 }
 
-RLEtable *TheImage::BuildRLE(int threshold)
+RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,int threshold)
 {
     RLEtable *parentcol, *currcol, *tmpnode1, *tmpnode2, *Blob, *tmpblob;
     parentcol = new RLEtable{0, 0, 0, 0, NULL, NULL, NULL, NULL, 0};
@@ -279,20 +279,20 @@ RLEtable *TheImage::BuildRLE(int threshold)
     bool headflag = false;
     int blobindex = 1;
 
-    for(int j = 0;j < m_height_;++j)
+    for(int j = 0;j < hei;++j)
     {
         tmpnode2 = currcol;
-        for(int i = 0;i<m_width_;++i)
+        for(int i = 0;i<wid;++i)
         {
             // image process create a col datalink
-            if(*(m_rawdate_ + i + j*m_width_) > threshold)
+            if(*(raw + i + j*wid) > threshold)
             {
-                *(m_rawdate_ + i + j*m_width_) = 255;
+                *(raw + i + j*wid) = 255;
                 headflag = false;
             }
             else
             {
-                *(m_rawdate_ + i + j*m_width_) = 0;
+                *(raw + i + j*wid) = 0;
                 if(!headflag)
                 {
                     RLEtable *newnode  = new RLEtable{0, i, i, j, NULL, NULL, NULL, NULL, 0};
@@ -496,8 +496,8 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
     tmpitmnode = itmnode;
 
     bool initflag = true;
-    tmp1 = blob->beside;
 
+    tmp1 = blob->beside;
     while(tmp1 != NULL)
     {
         if(tmp1->Ypos < filtersize)
@@ -507,7 +507,7 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
                 tmp2 = tmp1->nextnode;
                 DeleteBlobNode(tmp2, 1);
             }
-            DeleteBlobNode(tmp2, 0);
+            DeleteBlobNode(tmp1, 0);
             tmp1 = blob->beside;
         }
         else
@@ -517,7 +517,7 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
             {
                 if(initflag)
                 {
-                    ItemInfo *newitm = new ItemInfo{{{0,0},{0,0},{0,0},{0,0}}, 0, 0.0, NULL};
+                    ItemInfo *newitm = new ItemInfo{{{tmp2->Xstart,tmp2->Ypos},{tmp2->Xend,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos}}, 0, 0.0, NULL};
                     tmpitmnode->next = newitm;
                     itmnode->targetNum += 1;
                     tmpitmnode = tmpitmnode->next;
@@ -578,8 +578,8 @@ void TheImage::CleanNode(RLEtable *tar)
 {
     tar->beside = NULL;
     tar->preside = NULL;
-    tar->parenode = NULL;
     tar->nextnode = NULL;
+    tar->parenode = NULL;
     delete tar;
 }
 
@@ -609,7 +609,7 @@ void TheImage::InitITM(ItemInfo *ITM)
     ITM->targetNum = 0;
     ITM->theta = 0.0;
 }
-*/
+
 ItemInfo *TheImage::ScanItem(int threshold,int filtersize)
 {
     RLEtable *theblob;
@@ -617,4 +617,54 @@ ItemInfo *TheImage::ScanItem(int threshold,int filtersize)
     ItemInfo *theITM;
     theITM = GetInfoFromBlob(theblob, filtersize);
     return theITM;
+}
+*/
+void TheImage::PrintITM(ItemInfo *ITM)
+{
+    printf("<<ITM Head Size : %d >>\n", ITM->targetNum);
+    ITM = ITM->next;
+    while(ITM != NULL)
+    {
+        printf("[xmin:( %d, %d), ymin:( %d, %d), xmax:( %d, %d), ymax:( %d, %d)]\n",
+               ITM->points[0].x, ITM->points[0].y,
+               ITM->points[2].x, ITM->points[2].y,
+               ITM->points[1].x, ITM->points[1].y,
+               ITM->points[3].x, ITM->points[3].y);
+        ITM = ITM->next;
+    }
+}
+
+void TheImage::PrintBlob(RLEtable *blobhead)
+{
+    RLEtable *tmpblob, *tmpnode;
+    tmpblob = blobhead->beside;
+    while(tmpblob != NULL)
+    {
+        printf("<< Blobnode %d, nodeSize: %d >>\n", tmpblob->Index, tmpblob->Ypos);
+        tmpnode = tmpblob->nextnode;
+        while(tmpnode != NULL)
+        {
+            printf("Blobnum: %d, Xs: %d, Xe: %d, Y: %d, Cnt: %d\n", tmpnode->Index, tmpnode->Xstart, tmpnode->Xend, tmpnode->Ypos, tmpnode->count);
+            tmpnode = tmpnode->nextnode;
+        }
+        tmpblob = tmpblob->beside;
+    }
+}
+
+void TheImage::ClearBlob(RLEtable *blobhead)
+{
+    RLEtable *tmpblob, *tmpnode;
+    tmpblob = blobhead->beside;
+    while(tmpblob != NULL)
+    {
+        while(tmpblob->nextnode != NULL)
+        {
+            tmpnode = tmpblob->nextnode;
+            DeleteBlobNode(tmpnode, 1);
+        }
+        DeleteBlobNode(tmpblob,0);
+        tmpblob = blobhead->beside;
+    }
+    if(blobhead != NULL)
+        CleanNode(blobhead);
 }
