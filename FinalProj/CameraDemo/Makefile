@@ -52,7 +52,8 @@ SOURCES       = main.cpp \
 		mainwindow.cpp \
 		Camera/capturethread.cpp \
 		imgprocessthread.cpp \
-		ledthread.cpp moc_mainwindow.cpp \
+		ledthread.cpp \
+		thelock.cpp moc_mainwindow.cpp \
 		moc_capturethread.cpp \
 		moc_imgprocessthread.cpp \
 		moc_ledthread.cpp
@@ -61,6 +62,7 @@ OBJECTS       = main.o \
 		capturethread.o \
 		imgprocessthread.o \
 		ledthread.o \
+		thelock.o \
 		moc_mainwindow.o \
 		moc_capturethread.o \
 		moc_imgprocessthread.o \
@@ -132,11 +134,13 @@ DIST          = /usr/lib/arm-linux-gnueabihf/qt5/mkspecs/features/spec_pre.prf \
 		TheLib/theimage.h \
 		TheLib/theled.h \
 		imgprocessthread.h \
-		ledthread.h main.cpp \
+		ledthread.h \
+		thelock.h main.cpp \
 		mainwindow.cpp \
 		Camera/capturethread.cpp \
 		imgprocessthread.cpp \
-		ledthread.cpp
+		ledthread.cpp \
+		thelock.cpp
 QMAKE_TARGET  = CameraDemo
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = CameraDemo
@@ -302,8 +306,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents mainwindow.h Camera/CameraApi.h Camera/CameraDefine.h Camera/CameraStatus.h Camera/capturethread.h TheLib/bcmtest.h TheLib/bmpstruct.h TheLib/imgpross.h TheLib/theimage.h TheLib/theled.h imgprocessthread.h ledthread.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp mainwindow.cpp Camera/capturethread.cpp imgprocessthread.cpp ledthread.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents mainwindow.h Camera/CameraApi.h Camera/CameraDefine.h Camera/CameraStatus.h Camera/capturethread.h TheLib/bcmtest.h TheLib/bmpstruct.h TheLib/imgpross.h TheLib/theimage.h TheLib/theled.h imgprocessthread.h ledthread.h thelock.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp mainwindow.cpp Camera/capturethread.cpp imgprocessthread.cpp ledthread.cpp thelock.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents mainwindow.ui $(DISTDIR)/
 
 
@@ -335,8 +339,9 @@ moc_mainwindow.cpp: Camera/CameraDefine.h \
 		Camera/capturethread.h \
 		TheLib/theimage.h \
 		TheLib/bmpstruct.h \
-		imgprocessthread.h \
 		TheLib/imgpross.h \
+		thelock.h \
+		imgprocessthread.h \
 		ledthread.h \
 		TheLib/theled.h \
 		TheLib/bcmtest.h \
@@ -345,6 +350,8 @@ moc_mainwindow.cpp: Camera/CameraDefine.h \
 
 moc_capturethread.cpp: TheLib/theimage.h \
 		TheLib/bmpstruct.h \
+		TheLib/imgpross.h \
+		thelock.h \
 		Camera/capturethread.h
 	/usr/lib/arm-linux-gnueabihf/qt5/bin/moc $(DEFINES) -I/usr/lib/arm-linux-gnueabihf/qt5/mkspecs/linux-g++ -I/home/momoj/Desktop/FinalProj/CameraDemo -I/home/momoj/Desktop/FinalProj/CameraDemo/Camera -I/home/momoj/Desktop/FinalProj/CameraDemo/TheLib -I/home/momoj/Desktop/FinalProj/CameraDemo/TheLib -I/home/momoj/Desktop/FinalProj/CameraDemo/TheLib -I/usr/include/arm-linux-gnueabihf/qt5 -I/usr/include/arm-linux-gnueabihf/qt5/QtWidgets -I/usr/include/arm-linux-gnueabihf/qt5/QtGui -I/usr/include/arm-linux-gnueabihf/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/arm-linux-gnueabihf/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/arm-linux-gnueabihf/5/include -I/usr/local/include -I/usr/lib/gcc/arm-linux-gnueabihf/5/include-fixed -I/usr/include/arm-linux-gnueabihf -I/usr/include Camera/capturethread.h -o moc_capturethread.cpp
 
@@ -383,8 +390,9 @@ main.o: main.cpp mainwindow.h \
 		Camera/capturethread.h \
 		TheLib/theimage.h \
 		TheLib/bmpstruct.h \
-		imgprocessthread.h \
 		TheLib/imgpross.h \
+		thelock.h \
+		imgprocessthread.h \
 		ledthread.h \
 		TheLib/theled.h \
 		TheLib/bcmtest.h
@@ -396,8 +404,9 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		Camera/capturethread.h \
 		TheLib/theimage.h \
 		TheLib/bmpstruct.h \
-		imgprocessthread.h \
 		TheLib/imgpross.h \
+		thelock.h \
+		imgprocessthread.h \
 		ledthread.h \
 		TheLib/theled.h \
 		TheLib/bcmtest.h \
@@ -411,8 +420,9 @@ capturethread.o: Camera/capturethread.cpp mainwindow.h \
 		Camera/capturethread.h \
 		TheLib/theimage.h \
 		TheLib/bmpstruct.h \
-		imgprocessthread.h \
 		TheLib/imgpross.h \
+		thelock.h \
+		imgprocessthread.h \
 		ledthread.h \
 		TheLib/theled.h \
 		TheLib/bcmtest.h \
@@ -429,6 +439,9 @@ ledthread.o: ledthread.cpp ledthread.h \
 		TheLib/theled.h \
 		TheLib/bcmtest.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ledthread.o ledthread.cpp
+
+thelock.o: thelock.cpp thelock.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o thelock.o thelock.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp

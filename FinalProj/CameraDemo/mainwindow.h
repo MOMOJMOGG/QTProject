@@ -90,6 +90,13 @@ private slots:
 
     void on_pushButton_binary_clicked();
 
+    void on_pushButton_chmod_clicked();
+
+    void on_pushButton_softtrigg_clicked();
+
+    void cap_to_suspend();
+    void cap_to_resume();
+
 private:
     Ui::MainWindow *ui;
     QAction *cmrAction;

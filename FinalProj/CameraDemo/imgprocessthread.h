@@ -19,6 +19,8 @@ public:
 
 signals:
     void processed(QImage);
+    void cmd_suspend_cap();
+    void cmd_resume_cap();
 public slots:
     void slot_startThread();
 private:

@@ -37,16 +37,18 @@ public:
     int SetRawSize(int tarsized);
     int SetBMPInfo(int tarwidth, int tarheight);
     int CopyRaw(unsigned char *sourceraw,int tarsized,int wid, int hei);
-    ItemInfo *ScanItem(int threshold,int filtersize);
+    //ItemInfo *ScanItem(int threshold,int filtersize);
 
-    RLEtable *BuildRLE(int threshold);
+    RLEtable *BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,int threshold);
     RLEtable *FindNodeHead(RLEtable *curr, int mode, int pos);
     void ChangeNodetar(RLEtable *curr, int item, int val, int val2);
     void DeleteBlobNode(RLEtable *blobtar, int mode);
     ItemInfo *GetInfoFromBlob(RLEtable *blob, int filtersize);
     void CleanNode(RLEtable *tar);
     void CleanItem(ItemInfo *theITM);
-    //void InitITM(ItemInfo *ITM);
+    void PrintBlob(RLEtable *blobhead);
+    void PrintITM(ItemInfo *ITM);
+    void ClearBlob(RLEtable *thehead);
 };
 
 #endif // THEIMAGE_H

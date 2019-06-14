@@ -53,6 +53,8 @@ public:
     QPushButton *pushButton_antiflash;
     QPushButton *pushButton_mirror_h;
     QPushButton *pushButton_mirror_v;
+    QPushButton *pushButton_chmod;
+    QPushButton *pushButton_softtrigg;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -140,6 +142,12 @@ public:
         pushButton_mirror_v = new QPushButton(centralWidget);
         pushButton_mirror_v->setObjectName(QStringLiteral("pushButton_mirror_v"));
         pushButton_mirror_v->setGeometry(QRect(90, 150, 41, 25));
+        pushButton_chmod = new QPushButton(centralWidget);
+        pushButton_chmod->setObjectName(QStringLiteral("pushButton_chmod"));
+        pushButton_chmod->setGeometry(QRect(10, 400, 61, 27));
+        pushButton_softtrigg = new QPushButton(centralWidget);
+        pushButton_softtrigg->setObjectName(QStringLiteral("pushButton_softtrigg"));
+        pushButton_softtrigg->setGeometry(QRect(80, 400, 61, 27));
         MainWindow->setCentralWidget(centralWidget);
         statusBar = new QStatusBar(MainWindow);
         statusBar->setObjectName(QStringLiteral("statusBar"));
@@ -171,6 +179,8 @@ public:
         pushButton_antiflash->setText(QApplication::translate("MainWindow", "F", 0));
         pushButton_mirror_h->setText(QApplication::translate("MainWindow", "<>", 0));
         pushButton_mirror_v->setText(QApplication::translate("MainWindow", "^v", 0));
+        pushButton_chmod->setText(QApplication::translate("MainWindow", "chmod", 0));
+        pushButton_softtrigg->setText(QApplication::translate("MainWindow", "trigg", 0));
     } // retranslateUi
 
 };

@@ -28,7 +28,8 @@ SOURCES += \
         mainwindow.cpp \
     Camera/capturethread.cpp \
     imgprocessthread.cpp \
-    ledthread.cpp
+    ledthread.cpp \
+    thelock.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -42,7 +43,8 @@ HEADERS += \
     TheLib/theimage.h \
     TheLib/theled.h \
     imgprocessthread.h \
-    ledthread.h
+    ledthread.h \
+    thelock.h
 
 FORMS += \
         mainwindow.ui

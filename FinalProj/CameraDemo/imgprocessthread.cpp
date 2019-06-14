@@ -8,12 +8,12 @@
 #include <QSemaphore>
 
 extern TheImage *g_img_;
-extern QMutex mutex_cam_param;
 extern bool g_threshold_flag;
-//extern int k_bits;
 extern int g_threshold;
-extern QSemaphore sema_cam;
-extern QSemaphore sema_pro;
+extern QMutex g_mutex;
+extern QWaitCondition g_waitprocess;
+extern QWaitCondition g_waitcopy;
+extern bool prfinish_flag;
 
 imgprocessthread::imgprocessthread(QObject *parent) : QObject(parent)
 {
@@ -35,24 +35,23 @@ void imgprocessthread::slot_startThread()
 
        if(g_threshold_flag)
        {
+           //emit cmd_suspend_cap();
+           //g_mutex.lock();
+           //m_imgpross.Binary_thres(g_img_->GetRaw(), g_img_->GetImgWidth(),g_img_->GetImgHeight(), g_threshold);
+           //QImage imgg(g_img_->GetRaw(),g_img_->GetImgWidth(),g_img_->GetImgHeight(), QImage::Format_Indexed8);
+           //g_waitprocess.wakeOne();
 
-           sema_pro.acquire();
-           //m_imgpross.Binary_thres(g_img_->GetRaw(),g_img_->GetImgWidth(),g_img_->GetImgHeight(),g_threshold);
-           g_img_->GetInfoFromBlob( g_img_->BuildRLE(150),100);
+           //g_mutex.unlock();
+           //emit processed(imgg);
+           //imgg.setColorTable(grayColourTable);
+           //emit cmd_resume_cap();
 
-           sema_cam.release();
 
-           QImage imgg(g_img_->GetRaw(),g_img_->GetImgWidth(),g_img_->GetImgHeight(), QImage::Format_Indexed8);
-           imgg.setColorTable(grayColourTable);
 
-           emit(processed(imgg));
-
+           //RLEtable *rle = g_img_->BuildRLE(150);
+           //ItemInfo *theitm = g_img_->GetInfoFromBlob(rle, 100);
+           //g_img_->CleanItem(theitm);
        }
-       else
-       {}
-
-
-
 
        QThread::usleep(1000);
     }

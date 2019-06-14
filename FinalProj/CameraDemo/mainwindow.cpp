@@ -2,14 +2,14 @@
 #include "ui_mainwindow.h"
 
 #include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 
 #include "CameraDefine.h"
 #include "CameraStatus.h"
 #include "CameraApi.h"
 #include "capturethread.h"
 
-#include <QDebug>
-#include <QSemaphore>
 #include <QDebug>
 
 cam_param g_cam;
@@ -18,12 +18,12 @@ bool mirror_h = true;
 bool mirror_v = true;
 BOOL anti = true;
 
-QMutex mutex_cam_param;
 bool g_threshold_flag=false;
-//int k_bits =1;
 int g_threshold = 127;
-QSemaphore sema_cam(1);
-QSemaphore sema_pro(1);
+QMutex g_mutex;
+QWaitCondition g_waitprocess;
+QWaitCondition g_waitcopy;
+bool prfinish_flag = false;
 
 int lednum1=0;
 int lednum2=0;
@@ -36,6 +36,7 @@ double g_focal = 12; // 12 mm
 double g_x_ratio = g_fov_w/g_wd*g_focal/752; // mm
 double g_y_ratio = g_fov_h/g_wd*g_focal/480; // mm
 int g_filtersize=50;
+int cam_mode;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -55,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(controlThread,SIGNAL(finished()),controlThread,SLOT(deleteLater()));   //finish and delete
     connect(controlThread,SIGNAL(started()),myCaptureThread,SLOT(slot_startThread()));
     connect(myCaptureThread,SIGNAL(captured(QImage)), this, SLOT(slot_handleCaputred(QImage)));
+    connect(myCaptureThread,SIGNAL(captured2(QImage)),this, SLOT(slot_handleCaputred2(QImage)));
 
     controlProssThread = new QThread;  //controll thread
     imgProssThread = new imgprocessthread; //work thread
@@ -62,7 +64,9 @@ MainWindow::MainWindow(QWidget *parent) :
     imgProssThread->moveToThread(controlProssThread);
     connect(controlProssThread,SIGNAL(finished()),controlProssThread,SLOT(deleteLater()));
     connect(controlProssThread,SIGNAL(started()),imgProssThread,SLOT(slot_startThread()));
-    connect(imgProssThread,SIGNAL(processed(QImage)),this,SLOT(slot_handleCaputred2(QImage)));
+    connect(imgProssThread, SIGNAL(processed(QImage)), this, SLOT(slot_handleCaputred2(QImage)));
+    connect(imgProssThread, SIGNAL(cmd_resume_cap()),this, SLOT(cap_to_resume()));
+    connect(imgProssThread, SIGNAL(cmd_suspend_cap()),this, SLOT(cap_to_suspend()));
 
     controlLEDThread = new QThread; // controll thread
     ledThread = new LedThread; // work thread
@@ -129,13 +133,11 @@ void MainWindow::on_pushButton_init_cam_clicked()
 
     if(err == 0)
     {
-       controlThread->start();  //open thread slot
+        controlThread->start();  //open thread slot
         ui->graphicsView->setFixedSize(g_cam.wid + 4, g_cam.hei + 4);
-
         ui->graphicsView_2->setFixedSize(g_cam.wid + 4, g_cam.hei + 4);
         controlProssThread->start();
         controlLEDThread->start();
-
     }
 
     if(err == 0)
@@ -187,6 +189,7 @@ int MainWindow::Init_Cam()
     g_img_->SetImgHeight(g_cam.hei);
     g_img_->SetBMPInfo(g_img_->GetImgWidth(),g_img_->GetImgHeight());
     g_img_->SetRawSize(g_cam.wid * g_cam.hei);
+    CameraGetTriggerMode(g_cam.hCamera, &cam_mode);
     //qDebug() << g_cam.wid;
     //qDebug() << g_cam.hei;
 
@@ -249,7 +252,7 @@ void MainWindow::slot_handleCaputred(QImage img)
 
 void MainWindow::slot_handleCaputred2(QImage img)
 {
-    QPixmap pixmap = QPixmap::fromImage(img);
+    QPixmap pixmap = QPixmap::fromImage(img); 
 
     scene2->clear();
     scene2->setSceneRect(0,0,img.width(),img.height());
@@ -338,4 +341,35 @@ void MainWindow::on_pushButton_binary_clicked()
     else
         ui->pushButton_binary->setStyleSheet("color : black;"
                                                 "background-color : white;");
+}
+
+void MainWindow::on_pushButton_chmod_clicked()
+{
+    if(cam_mode == 0)
+    {
+        cam_mode = 1;
+        CameraSetTriggerMode(g_cam.hCamera, cam_mode);
+    }
+    else
+    {
+        cam_mode = 0;
+        CameraSetTriggerMode(g_cam.hCamera, cam_mode);
+    }
+}
+void MainWindow::on_pushButton_softtrigg_clicked()
+{
+    if(cam_mode == 1)
+    {
+        CameraSoftTrigger(g_cam.hCamera);
+    }
+}
+
+void MainWindow::cap_to_resume()
+{
+    myCaptureThread->resume();
+}
+
+void MainWindow::cap_to_suspend()
+{
+    myCaptureThread->suspend();
 }
