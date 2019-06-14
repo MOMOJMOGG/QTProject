@@ -39,8 +39,8 @@ public:
     int CopyRaw(unsigned char *sourceraw,int tarsized,int wid, int hei);
     //ItemInfo *ScanItem(int threshold,int filtersize);
 
-    RLEtable *BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,int threshold);
-    RLEtable *FindNodeHead(RLEtable *curr, int mode, int pos);
+    RLEtable *BuildRLE(unsigned char *raw,int wid, int hei,int threshold);
+    RLEtable *FindNodeHead(RLEtable *curr, int mode, int pos, RLEtable *tar);
     void ChangeNodetar(RLEtable *curr, int item, int val, int val2);
     void DeleteBlobNode(RLEtable *blobtar, int mode);
     ItemInfo *GetInfoFromBlob(RLEtable *blob, int filtersize);

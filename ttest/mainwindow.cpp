@@ -29,11 +29,11 @@ void MainWindow::on_pushButton_clicked()
     RLEtable *theblob;
     ItemInfo *theit,*themm;
     timedebug.start();
-    theblob = g_img->BuildRLE(200);
+    theblob = g_img->BuildRLE(g_img->GetRaw(), g_img->GetImgWidth(), g_img->GetImgHeight(), 127);
     qDebug() << "Build " << timedebug.elapsed() << "ms";
-    g_img->ClearBlob(theblob);
-/*
-    theit = g_img->GetInfoFromBlob(theblob, 1);
+    //g_img->ClearBlob(theblob);
+
+    theit = g_img->GetInfoFromBlob(theblob, 10);
     ui->listWidget->addItem("<<ITM Head Size :"+QString::number(theit->targetNum)  +">>\n");
     qDebug() << "Build+Get " <<timedebug.elapsed() << "ms";
     themm = theit;
@@ -41,8 +41,8 @@ void MainWindow::on_pushButton_clicked()
     while(themm != NULL)
     {
        ui->listWidget->addItem("<<[xmin:( "+QString::number(themm->points[0].x)+","+QString::number(themm->points[0].y)  +")]");
-       ui->listWidget->addItem("<<[ymin:( "+QString::number(themm->points[1].x)+","+QString::number(themm->points[1].y)  +")]");
-       ui->listWidget->addItem("<<[xmax:( "+QString::number(themm->points[2].x)+","+QString::number(themm->points[2].y)  +")]");
+       ui->listWidget->addItem("<<[ymin:( "+QString::number(themm->points[2].x)+","+QString::number(themm->points[2].y)  +")]");
+       ui->listWidget->addItem("<<[xmax:( "+QString::number(themm->points[1].x)+","+QString::number(themm->points[1].y)  +")]");
        ui->listWidget->addItem("<<[ymax:( "+QString::number(themm->points[3].x)+","+QString::number(themm->points[3].y)  +")]");
        ui->listWidget->addItem("");
         themm = themm->next;
@@ -50,7 +50,7 @@ void MainWindow::on_pushButton_clicked()
 
 
     g_img->CleanItem(theit);
-*/
+
 
 
     //g_img->CleanItem(theit);
