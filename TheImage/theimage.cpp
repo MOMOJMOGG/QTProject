@@ -269,12 +269,12 @@ int TheImage::CopyRaw(unsigned char *sourceraw,int tarsized,int wid, int hei)
     return 0;
 }
 
-RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,int threshold)
+RLEtable *TheImage::BuildRLE(unsigned char *raw,int wid, int hei,int threshold)
 {
     RLEtable *parentcol, *currcol, *tmpnode1, *tmpnode2, *Blob, *tmpblob;
-    parentcol = new RLEtable{0, 0, 0, 0, NULL, NULL, NULL, NULL, 0};
-    currcol = new RLEtable{0, 0, 0, 0, NULL, NULL, NULL, NULL, 0};
-    Blob = new RLEtable{0, 0, 0, 0, NULL, NULL, NULL, NULL, 0};
+    parentcol = new RLEtable{0, 0, 0, 0, 0, NULL, NULL};
+    currcol = new RLEtable{0, 0, 0, 0, 0, NULL, NULL};
+    Blob = new RLEtable{0, 0, 0, 0, 0, NULL, NULL};
 
     bool headflag = false;
     int blobindex = 1;
@@ -295,7 +295,7 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,in
                 *(raw + i + j*wid) = 0;
                 if(!headflag)
                 {
-                    RLEtable *newnode  = new RLEtable{0, i, i, j, NULL, NULL, NULL, NULL, 0};
+                    RLEtable *newnode  = new RLEtable{0, i, i, j, 0, NULL, NULL};
                     tmpnode2->beside = newnode;
                     tmpnode2 = tmpnode2->beside;
                     headflag = true;
@@ -324,7 +324,6 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,in
                         if(tmpnode1->nextnode == NULL) // I
                         {
                             tmpnode1->nextnode = tmpnode2;
-                            tmpnode2->parenode = tmpnode1;
                             tmpnode2->Index = tmpnode1->Index;
                             ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
                         }
@@ -332,40 +331,33 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,in
                         {
                             if(tmpnode1->count == 1) //Left W
                             {
-                                tmpblob = FindNodeHead(tmpnode1, 3, NULL);
+                                tmpblob = FindNodeHead(tmpnode1, 3, NULL, NULL);
                                 tmpblob->nextnode = tmpnode2;
-                                tmpnode2->parenode = tmpblob;
-                                tmpnode2->Index = tmpblob->Index;
+                                tmpnode2->Index = tmpnode1->Index;
                                 ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
                             }
                             else // m
                             {
-                                tmpblob = FindNodeHead(tmpnode1, 3, tmpnode1->count-1);
-                                if(tmpblob->nextnode != NULL)
-                                {
-                                    tmpblob->nextnode->parenode = tmpnode2;
-                                    tmpnode2->nextnode = tmpblob->nextnode;
-                                }
+                                tmpblob = FindNodeHead(tmpnode1, 3, tmpnode1->count-1, NULL);
+                                tmpnode2->nextnode = tmpblob->nextnode;
                                 tmpblob->nextnode = tmpnode2;
-                                tmpnode2->parenode = tmpblob;
-                                tmpnode2->Index = tmpblob->Index;
+                                tmpnode2->Index = tmpnode1->Index;
                                 ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
                             }
                         }
                     }
-                    else // U, No
+                    else // U
                     {
                         if(tmpnode1->nextnode == NULL) // U
                         {
-                            tmpblob = FindNodeHead(tmpnode1, 1, NULL);
-                            tmpnode2->parenode->nextnode = tmpblob->nextnode;
-                            tmpblob->nextnode->parenode = tmpnode2->parenode;
-                            ChangeNodetar(tmpblob->nextnode, 2, tmpnode2->parenode->Index, NULL);
-                            ChangeNodetar(Blob, 3, tmpnode2->Index, tmpblob->Ypos);
-                            tmpblob->nextnode = NULL;
+                            tmpblob = FindNodeHead(Blob, 1, tmpnode1->Index, NULL);
+                            RLEtable *tmppare = FindNodeHead(Blob, 4, tmpnode2->Index, tmpnode2);
+                            tmppare->nextnode = tmpblob->beside->nextnode;
+                            ChangeNodetar(tmpblob->beside->nextnode, 2, tmpnode2->Index, NULL);
+                            ChangeNodetar(Blob, 3, tmpnode2->Index, tmpblob->beside->Ypos);
+                            tmpblob->beside->nextnode = NULL;
                             DeleteBlobNode(tmpblob, 0);
                             tmpnode1->nextnode = tmpnode2;
-                            tmpnode2->parenode = tmpnode1;
                         }
                     }
                 } // end connect
@@ -379,12 +371,10 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,in
         {
             if(tmpnode2->count == 0)
             {
-                RLEtable *newnode = new RLEtable{blobindex, 0, 0, 1, NULL, NULL, NULL, NULL, 0};
-                tmpblob = FindNodeHead(Blob, 2, NULL);
+                RLEtable *newnode = new RLEtable{blobindex, 0, 0, 1, 0, NULL, NULL};
+                tmpblob = FindNodeHead(Blob, 2, NULL, NULL);
                 tmpblob->beside = newnode;
-                newnode->preside = tmpblob;
                 newnode->nextnode = tmpnode2;
-                tmpnode2->parenode = newnode;
                 tmpnode2->Index = newnode->Index;
                 blobindex += 1;
             }
@@ -404,13 +394,12 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int tarsized,int wid, int hei,in
     return Blob;
 }
 
-RLEtable *TheImage::FindNodeHead(RLEtable *curr, int mode, int pos)
+RLEtable *TheImage::FindNodeHead(RLEtable *curr, int mode, int pos, RLEtable *tar)
 {
     switch (mode) {
     case 1:
-        curr = curr->parenode;
-        while(curr->parenode != NULL)
-            curr = curr->parenode;
+        while(curr->beside->Index != pos)
+            curr = curr->beside;
         break;
     case 2:
         while(curr->beside != NULL)
@@ -419,9 +408,8 @@ RLEtable *TheImage::FindNodeHead(RLEtable *curr, int mode, int pos)
     case 3:
         if(pos == NULL)
         {
-            curr = curr->nextnode;
-            while(curr->nextnode != NULL)
-                curr = curr->nextnode;
+            do{curr = curr->nextnode;}
+            while(curr->nextnode != NULL);
         }
         else
         {
@@ -429,6 +417,11 @@ RLEtable *TheImage::FindNodeHead(RLEtable *curr, int mode, int pos)
                 curr = curr->nextnode;
         }
         break;
+    case 4:
+        do{curr = curr->beside;}
+        while(curr->Index != pos);
+        while(curr->nextnode != tar)
+            curr = curr->nextnode;
     default:
         break;
     }
@@ -452,15 +445,10 @@ void TheImage::ChangeNodetar(RLEtable *curr, int item, int val, int val2)
         }
         break;
     case 3:
-        while(curr != NULL)
-        {
-            if(curr->Index == val)
-            {
-                curr->Ypos += val2;
-                return;
-            }
-            curr = curr->beside;
-        }
+        do{curr = curr->beside;}
+        while(curr->Index != val);
+        curr->Ypos += val2;
+        return;
         break;
     default:
         break;
@@ -471,19 +459,15 @@ void TheImage::DeleteBlobNode(RLEtable *blobtar, int mode)
 {
     if(mode == 0)
     {
-        RLEtable *prenode = blobtar->preside;
-        prenode->beside = blobtar->beside;
-        if(blobtar->beside != NULL)
-            blobtar->beside->preside = prenode;
-        CleanNode(blobtar);
+        RLEtable *besidenode = blobtar->beside;
+        blobtar->beside = besidenode->beside;
+        CleanNode(besidenode);
     }
     else
     {
-        RLEtable *prenode = blobtar->parenode;
-        prenode->nextnode = blobtar->nextnode;
-        if(blobtar->nextnode != NULL)
-            blobtar->nextnode->parenode = prenode;
-        CleanNode(blobtar);
+        RLEtable *nxtnode = blobtar->nextnode;
+        blobtar->nextnode = nxtnode->nextnode;
+        CleanNode(nxtnode);
     }
 }
 
@@ -503,11 +487,8 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
         if(tmp1->Ypos < filtersize)
         {
             while(tmp1->nextnode != NULL)
-            {
-                tmp2 = tmp1->nextnode;
-                DeleteBlobNode(tmp2, 1);
-            }
-            DeleteBlobNode(tmp1, 0);
+                DeleteBlobNode(tmp1, 1);
+            DeleteBlobNode(blob, 0);
             tmp1 = blob->beside;
         }
         else
@@ -557,11 +538,11 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
                     tmpitmnode->points[3].y = tmp2->Ypos;
                 }
 
-                DeleteBlobNode(tmp2, 1);
+                DeleteBlobNode(tmp1, 1);
                 tmp2 = tmp1->nextnode;
             }
 
-            DeleteBlobNode(tmp1, 0);
+            DeleteBlobNode(blob, 0);
             tmp1 = blob->beside;
         } // end search for 1 blob node
 
@@ -577,9 +558,7 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
 void TheImage::CleanNode(RLEtable *tar)
 {
     tar->beside = NULL;
-    tar->preside = NULL;
     tar->nextnode = NULL;
-    tar->parenode = NULL;
     delete tar;
 }
 
@@ -653,16 +632,13 @@ void TheImage::PrintBlob(RLEtable *blobhead)
 
 void TheImage::ClearBlob(RLEtable *blobhead)
 {
-    RLEtable *tmpblob, *tmpnode;
+    RLEtable *tmpblob;
     tmpblob = blobhead->beside;
     while(tmpblob != NULL)
     {
         while(tmpblob->nextnode != NULL)
-        {
-            tmpnode = tmpblob->nextnode;
-            DeleteBlobNode(tmpnode, 1);
-        }
-        DeleteBlobNode(tmpblob,0);
+            DeleteBlobNode(tmpblob, 1);
+        DeleteBlobNode(blobhead,0);
         tmpblob = blobhead->beside;
     }
     if(blobhead != NULL)
