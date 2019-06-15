@@ -29,7 +29,7 @@ void MainWindow::on_pushButton_clicked()
     RLEtable *theblob;
     ItemInfo *theit,*themm;
     timedebug.start();
-    theblob = g_img->BuildRLE(g_img->GetRaw(), g_img->GetImgWidth(), g_img->GetImgHeight(), 127);
+    theblob = g_img->BuildRLE(g_img->GetRaw(), g_img->GetImgWidth(), g_img->GetImgHeight(), 128);
     qDebug() << "Build " << timedebug.elapsed() << "ms";
     //g_img->ClearBlob(theblob);
 
