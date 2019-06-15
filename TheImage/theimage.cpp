@@ -319,7 +319,7 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int wid, int hei,int threshold)
                     tmpnode1->count += 1;
                     tmpnode2->count += 1;
 
-                    if(tmpnode2->count == 1) // I, m, Left W
+                    if(tmpnode2->count == 1) // I, |^|^|^^^^
                     {
                         if(tmpnode1->nextnode == NULL) // I
                         {
@@ -329,26 +329,15 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int wid, int hei,int threshold)
                         }
                         else
                         {
-                            if(tmpnode1->count == 1) //Left W
-                            {
-                                tmpblob = FindNodeHead(tmpnode1, 3, NULL, NULL);
-                                tmpblob->nextnode = tmpnode2;
-                                tmpnode2->Index = tmpnode1->Index;
-                                ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
-                            }
-                            else // m
-                            {
-                                tmpblob = FindNodeHead(tmpnode1, 3, tmpnode1->count-1, NULL);
-                                tmpnode2->nextnode = tmpblob->nextnode;
-                                tmpblob->nextnode = tmpnode2;
-                                tmpnode2->Index = tmpnode1->Index;
-                                ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
-                            }
+                            tmpblob = FindNodeHead(tmpnode1, 3, NULL, NULL);
+                            tmpblob->nextnode = tmpnode2;
+                            tmpnode2->Index = tmpnode1->Index;
+                            ChangeNodetar(Blob, 3, tmpnode2->Index, 1);
                         }
                     }
                     else // U
                     {
-                        if(tmpnode1->nextnode == NULL) // U
+                        if(tmpnode1->Index != tmpnode2->Index)
                         {
                             tmpblob = FindNodeHead(Blob, 1, tmpnode1->Index, NULL);
                             RLEtable *tmppare = FindNodeHead(Blob, 4, tmpnode2->Index, tmpnode2);
@@ -357,7 +346,13 @@ RLEtable *TheImage::BuildRLE(unsigned char *raw,int wid, int hei,int threshold)
                             ChangeNodetar(Blob, 3, tmpnode2->Index, tmpblob->beside->Ypos);
                             tmpblob->beside->nextnode = NULL;
                             DeleteBlobNode(tmpblob, 0);
-                            tmpnode1->nextnode = tmpnode2;
+                            if(tmpnode1->nextnode != NULL)
+                            {
+                                tmpblob = FindNodeHead(tmpnode1, 3, NULL, NULL);
+                                tmpblob->nextnode = tmpnode2;
+                            }
+                            else
+                                tmpnode1->nextnode = tmpnode2;
                         }
                     }
                 } // end connect
