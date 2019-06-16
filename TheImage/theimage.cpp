@@ -471,7 +471,7 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
     RLEtable *tmp1, *tmp2;
     int xmin=0, xmax=0, ymin=0, ymax=0;
     ItemInfo *itmnode, *tmpitmnode;
-    itmnode = new ItemInfo{{{0,0},{0,0},{0,0},{0,0}}, 0, 0.0, NULL};
+    itmnode = new ItemInfo{{{0,0},{0,0},{0,0},{0,0}}, NULL};
     tmpitmnode = itmnode;
 
     bool initflag = true;
@@ -493,9 +493,9 @@ ItemInfo *TheImage::GetInfoFromBlob(RLEtable *blob, int filtersize)
             {
                 if(initflag)
                 {
-                    ItemInfo *newitm = new ItemInfo{{{tmp2->Xstart,tmp2->Ypos},{tmp2->Xend,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos}}, 0, 0.0, NULL};
+                    ItemInfo *newitm = new ItemInfo{{{tmp2->Xstart,tmp2->Ypos},{tmp2->Xend,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos},{(tmp2->Xstart + tmp2->Xend)/2,tmp2->Ypos}}, NULL};
                     tmpitmnode->next = newitm;
-                    itmnode->targetNum += 1;
+                    itmnode->points[0].x += 1;
                     tmpitmnode = tmpitmnode->next;
                     initflag = false;
 
@@ -580,8 +580,6 @@ void TheImage::InitITM(ItemInfo *ITM)
         ITM->points[p].y = 0;
     }
     ITM->next = NULL;
-    ITM->targetNum = 0;
-    ITM->theta = 0.0;
 }
 
 ItemInfo *TheImage::ScanItem(int threshold,int filtersize)
@@ -595,7 +593,7 @@ ItemInfo *TheImage::ScanItem(int threshold,int filtersize)
 */
 void TheImage::PrintITM(ItemInfo *ITM)
 {
-    printf("<<ITM Head Size : %d >>\n", ITM->targetNum);
+    printf("<<ITM Head Size : %d >>\n", ITM->points[0].x);
     ITM = ITM->next;
     while(ITM != NULL)
     {

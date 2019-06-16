@@ -53,8 +53,6 @@ typedef struct the_p{
 
 typedef struct iteminfo{
     the_p points[4];
-    int targetNum;
-    double theta;
     iteminfo *next;
 }ItemInfo;
 
