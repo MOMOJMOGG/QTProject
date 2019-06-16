@@ -53,13 +53,18 @@ public:
     QThread         *controlThread;
     CaptureThread   *myCaptureThread;
 
-    QThread          *controlProssThread;
-    imgprocessthread *imgProssThread;
+    //QThread          *controlProssThread;
+    //imgprocessthread *imgProssThread;
 
     QThread          *controlLEDThread;
     LedThread        *ledThread;
 
-
+    QPen             *thepen;
+    QGraphicsTextItem *tx;
+    QFont             *font;
+signals:
+    void circle_cmd(int tar);
+    void square_cmd(int tar);
 private slots:
     void on_pushButton_init_cam_clicked();
 
@@ -68,7 +73,7 @@ private slots:
     void on_pushButton_pause_clicked();
 
     void slot_handleCaputred(QImage img);
-    void slot_handleCaputred2(QImage img);
+    void slot_handleCaputred2(QImage img, ItemInfo *rct);
 
     void on_lineEdit_threshold_textChanged(const QString &arg1);
 
@@ -94,13 +99,13 @@ private slots:
 
     void on_pushButton_softtrigg_clicked();
 
-    void cap_to_suspend();
-    void cap_to_resume();
+    void update_circle(int tar);
+    void update_square(int tar);
+//    void cap_to_suspend();
+//    void cap_to_resume();
 
 private:
     Ui::MainWindow *ui;
-    QAction *cmrAction;
-    QAction *ledAction;
 };
 
 #endif // MAINWINDOW_H

@@ -18,12 +18,11 @@ public:
     void closeThread();
     ImgPross m_imgpross;
 
-    void suspend();
-    void resume();
-
+    //void suspend();
+    //void resume();
 signals:
     void captured(QImage img);
-    void captured2(QImage img);
+    void captured2(QImage img, ItemInfo *rct);
 
 public slots:
     void slot_startThread();
@@ -31,10 +30,9 @@ public slots:
 
 private:
     QVector<QRgb> grayColourTable;
-
-    QMutex mutex;
-    QWaitCondition bufferisnotprocess;
-    void WaitOne(unsigned long time);
+    //QMutex mutex;
+    //QWaitCondition bufferisnotprocess;
+    //void WaitOne(unsigned long time);
 
 private:
     volatile bool isStop;

@@ -19,8 +19,8 @@
 
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_CaptureThread_t {
-    QByteArrayData data[6];
-    char stringdata0[55];
+    QByteArrayData data[8];
+    char stringdata0[69];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -34,11 +34,13 @@ QT_MOC_LITERAL(1, 14, 8), // "captured"
 QT_MOC_LITERAL(2, 23, 0), // ""
 QT_MOC_LITERAL(3, 24, 3), // "img"
 QT_MOC_LITERAL(4, 28, 9), // "captured2"
-QT_MOC_LITERAL(5, 38, 16) // "slot_startThread"
+QT_MOC_LITERAL(5, 38, 9), // "ItemInfo*"
+QT_MOC_LITERAL(6, 48, 3), // "rct"
+QT_MOC_LITERAL(7, 52, 16) // "slot_startThread"
 
     },
     "CaptureThread\0captured\0\0img\0captured2\0"
-    "slot_startThread"
+    "ItemInfo*\0rct\0slot_startThread"
 };
 #undef QT_MOC_LITERAL
 
@@ -57,14 +59,14 @@ static const uint qt_meta_data_CaptureThread[] = {
 
  // signals: name, argc, parameters, tag, flags
        1,    1,   29,    2, 0x06 /* Public */,
-       4,    1,   32,    2, 0x06 /* Public */,
+       4,    2,   32,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       5,    0,   35,    2, 0x0a /* Public */,
+       7,    0,   37,    2, 0x0a /* Public */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QImage,    3,
-    QMetaType::Void, QMetaType::QImage,    3,
+    QMetaType::Void, QMetaType::QImage, 0x80000000 | 5,    3,    6,
 
  // slots: parameters
     QMetaType::Void,
@@ -79,7 +81,7 @@ void CaptureThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->captured((*reinterpret_cast< QImage(*)>(_a[1]))); break;
-        case 1: _t->captured2((*reinterpret_cast< QImage(*)>(_a[1]))); break;
+        case 1: _t->captured2((*reinterpret_cast< QImage(*)>(_a[1])),(*reinterpret_cast< ItemInfo*(*)>(_a[2]))); break;
         case 2: _t->slot_startThread(); break;
         default: ;
         }
@@ -93,7 +95,7 @@ void CaptureThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
             }
         }
         {
-            typedef void (CaptureThread::*_t)(QImage );
+            typedef void (CaptureThread::*_t)(QImage , ItemInfo * );
             if (*reinterpret_cast<_t *>(func) == static_cast<_t>(&CaptureThread::captured2)) {
                 *result = 1;
             }
@@ -145,9 +147,9 @@ void CaptureThread::captured(QImage _t1)
 }
 
 // SIGNAL 1
-void CaptureThread::captured2(QImage _t1)
+void CaptureThread::captured2(QImage _t1, ItemInfo * _t2)
 {
-    void *_a[] = { Q_NULLPTR, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    void *_a[] = { Q_NULLPTR, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
     QMetaObject::activate(this, &staticMetaObject, 1, _a);
 }
 QT_END_MOC_NAMESPACE

@@ -4,22 +4,26 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QDebug>
+#include <QGraphicsItem>
+#include <QTime>
 
 #include "CameraDefine.h"
 #include "CameraStatus.h"
 #include "CameraApi.h"
 #include "capturethread.h"
+#include "math.h"
 
-#include <QDebug>
 
 cam_param g_cam;
 TheImage *g_img_ = new TheImage();
 bool mirror_h = true;
 bool mirror_v = true;
 BOOL anti = true;
+int cam_mode=0;
 
 bool g_threshold_flag=false;
-int g_threshold = 127;
+int g_threshold = 70;
 QMutex g_mutex;
 QWaitCondition g_waitprocess;
 QWaitCondition g_waitcopy;
@@ -31,12 +35,10 @@ bool g_led_flag=false;
 
 double g_fov_w = 144; // 144 mm
 double g_fov_h = 108; // 108 mm
-double g_wd = 360; // 360 mm
-double g_focal = 12; // 12 mm
-double g_x_ratio = g_fov_w/g_wd*g_focal/752; // mm
-double g_y_ratio = g_fov_h/g_wd*g_focal/480; // mm
-int g_filtersize=50;
-int cam_mode;
+double g_wd = 300; // 300 mm
+double g_focal = 10; // 10 mm
+double g_ratio = g_fov_h/g_wd*g_focal/480*13; // mm
+int g_filtersize=30;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -49,6 +51,14 @@ MainWindow::MainWindow(QWidget *parent) :
     scene2 = new QGraphicsScene();
     ui->graphicsView_2->setScene(scene2);
 
+    thepen = new QPen();
+    thepen->setColor(Qt::red);
+    thepen->setWidth(1);
+    font = new QFont("Helvitica",10,QFont::Bold);
+
+    connect(this, SIGNAL(circle_cmd(int)),this,SLOT(update_circle(int)));
+    connect(this, SIGNAL(square_cmd(int)),this,SLOT(update_square(int)));
+
     controlThread = new QThread;  //contorll thread
     myCaptureThread = new CaptureThread; //work thread
 
@@ -56,8 +66,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(controlThread,SIGNAL(finished()),controlThread,SLOT(deleteLater()));   //finish and delete
     connect(controlThread,SIGNAL(started()),myCaptureThread,SLOT(slot_startThread()));
     connect(myCaptureThread,SIGNAL(captured(QImage)), this, SLOT(slot_handleCaputred(QImage)));
-    connect(myCaptureThread,SIGNAL(captured2(QImage)),this, SLOT(slot_handleCaputred2(QImage)));
+    connect(myCaptureThread,SIGNAL(captured2(QImage,  ItemInfo *)),this, SLOT(slot_handleCaputred2(QImage, ItemInfo *)));
 
+    /*
     controlProssThread = new QThread;  //controll thread
     imgProssThread = new imgprocessthread; //work thread
 
@@ -67,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(imgProssThread, SIGNAL(processed(QImage)), this, SLOT(slot_handleCaputred2(QImage)));
     connect(imgProssThread, SIGNAL(cmd_resume_cap()),this, SLOT(cap_to_resume()));
     connect(imgProssThread, SIGNAL(cmd_suspend_cap()),this, SLOT(cap_to_suspend()));
-
+    */
     controlLEDThread = new QThread; // controll thread
     ledThread = new LedThread; // work thread
 
@@ -99,14 +110,14 @@ MainWindow::~MainWindow()
         controlThread->quit();        //break from event loop
         controlThread->wait();        //release resource slot
     }
-
+/*
     if(controlProssThread->isRunning())
     {
         imgProssThread->closeThread();
         controlProssThread->quit();
         controlProssThread->wait();
     }
-
+*/
     if(controlLEDThread->isRunning())
     {
         ledThread->closeThread();
@@ -118,8 +129,8 @@ MainWindow::~MainWindow()
 
     delete controlThread;
     delete myCaptureThread;
-    delete controlProssThread;
-    delete imgProssThread;
+//    delete controlProssThread;
+//    delete imgProssThread;
     delete controlLEDThread;
     delete ledThread;
 }
@@ -136,7 +147,7 @@ void MainWindow::on_pushButton_init_cam_clicked()
         controlThread->start();  //open thread slot
         ui->graphicsView->setFixedSize(g_cam.wid + 4, g_cam.hei + 4);
         ui->graphicsView_2->setFixedSize(g_cam.wid + 4, g_cam.hei + 4);
-        controlProssThread->start();
+//        controlProssThread->start();
         controlLEDThread->start();
     }
 
@@ -190,6 +201,12 @@ int MainWindow::Init_Cam()
     g_img_->SetBMPInfo(g_img_->GetImgWidth(),g_img_->GetImgHeight());
     g_img_->SetRawSize(g_cam.wid * g_cam.hei);
     CameraGetTriggerMode(g_cam.hCamera, &cam_mode);
+
+    //BOOL gg=0;
+    //int gg=1;
+    //CameraSetAeState(g_cam.hCamera, false);
+    //CameraSetLightFrequency(g_cam.hCamera,gg);
+    //qDebug() << gg;
     //qDebug() << g_cam.wid;
     //qDebug() << g_cam.hei;
 
@@ -248,15 +265,91 @@ void MainWindow::slot_handleCaputred(QImage img)
     scene->clear();
     scene->setSceneRect(0,0,img.width(),img.height());
     scene->addPixmap(pixmap);
+    /*
+    tx = scene->addText("Hello",*font);
+    tx->setPos(55,55);
+    tx->setDefaultTextColor(Qt::green);
+    tx = scene->addText("MOMO",*font);
+    tx->setPos(55,65);
+    tx->setDefaultTextColor(Qt::green);
+    */
+
+    //QRectF R[2]={{22,20,44,77},{100,100,200,200}};
+    //scene->addRect(*R, *thepen);
+    //scene->addRect(*(R+1),*thepen);
+
 }
 
-void MainWindow::slot_handleCaputred2(QImage img)
+void MainWindow::slot_handleCaputred2(QImage img, ItemInfo *rct)
 {
+    //QTime thef;
     QPixmap pixmap = QPixmap::fromImage(img); 
 
     scene2->clear();
     scene2->setSceneRect(0,0,img.width(),img.height());
     scene2->addPixmap(pixmap);
+    int L1=0;
+    int L2=0;
+
+    if(rct!=NULL)
+    {
+        ItemInfo *it = rct->next;
+        while(it!=NULL)
+        {
+            QRectF r(it->points[0].x,it->points[2].y,it->points[1].x-it->points[0].x,it->points[3].y-it->points[2].y);
+
+            //scene2->addRect(r,*thepen);
+            //scene2->addEllipse(r,*thepen);
+
+            qreal x1,y1,x2,y2;
+            r.getCoords(&x1,&y1,&x2,&y2);
+            double xscale = (x2-x1);
+            double yscale = (y2-y1);
+            double ratio = xscale>yscale ? (yscale/xscale) : (xscale/yscale);
+            if(ratio > 0.85)
+            {
+                scene2->addEllipse(r,*thepen);
+                L1+=1;
+                tx = scene2->addText("Diameter: "+QString::number((y2-y1))+" p ,"+QString::number((y2-y1)*g_ratio)+" mm",*font);
+                tx->setPos(x1+1,y1+1);
+                tx->setDefaultTextColor(Qt::green);
+            }
+            else
+            {
+                scene2->addRect(r,*thepen);
+                L2+=1;
+                double side1 = sqrt(pow(abs(it->points[2].x-it->points[0].x),2)+pow(abs(it->points[2].y-it->points[0].y),2));
+                double side2 = sqrt(pow(abs(it->points[2].x-it->points[1].x),2)+pow(abs(it->points[2].y-it->points[1].y),2));
+                double sideW = side1>side2 ? side1 : side2;
+                double sideH = side1<side2 ? side1 : side2;
+                tx = scene2->addText("W: "+QString::number(sideW)+" p ,"+QString::number(sideW*g_ratio)+" mm",*font);
+                tx->setPos(x1+1,y1+1);
+                tx->setDefaultTextColor(Qt::green);
+                tx = scene2->addText("H: "+QString::number(sideH)+" p ,"+QString::number(sideH*g_ratio)+" mm",*font);
+                tx->setPos(x1+1,y1+12);
+                tx->setDefaultTextColor(Qt::blue);
+            }
+            //qDebug() << ratio;
+
+
+
+            it = it->next;
+        }
+        g_img_->CleanItem(rct);
+    }
+    //qDebug() << thef.elapsed() <<"ms on ui";
+    emit circle_cmd(L1);
+    emit square_cmd(L2);
+        /*
+        QRectF r = rct.takeFirst();
+        rct.pop_front();
+        qreal x1,y1,x2,y2;
+        scene2->addRect(r,*thepen);
+        r.getCoords(&x1,&y1,&x2,&y2);
+        tx = scene->addText(QString::number((x2-x1)*g_x_ratio),*font);
+        tx->setPos((x1+x2)/2,y1+10);
+        tx->setDefaultTextColor(Qt::green);
+        */
 }
 
 
@@ -364,6 +457,19 @@ void MainWindow::on_pushButton_softtrigg_clicked()
     }
 }
 
+void MainWindow::update_circle(int tar)
+{
+    lednum1 = tar;
+    ui->label_circle->setText(QString::number(tar));
+}
+
+void MainWindow::update_square(int tar)
+{
+    lednum2 = tar;
+    ui->label_square->setText(QString::number(tar));
+}
+
+/*
 void MainWindow::cap_to_resume()
 {
     myCaptureThread->resume();
@@ -373,3 +479,4 @@ void MainWindow::cap_to_suspend()
 {
     myCaptureThread->suspend();
 }
+*/

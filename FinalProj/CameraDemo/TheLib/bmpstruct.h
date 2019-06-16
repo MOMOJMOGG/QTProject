@@ -41,11 +41,9 @@ typedef struct RLEtb{
     int Xstart;
     int Xend;
     int Ypos;
+    int count;
     RLEtb *nextnode;
     RLEtb *beside;
-    RLEtb *preside;
-    RLEtb *parenode;
-    int count;
 }RLEtable;
 
 typedef struct the_p{
@@ -55,8 +53,6 @@ typedef struct the_p{
 
 typedef struct iteminfo{
     the_p points[4];
-    int targetNum;
-    double theta;
     iteminfo *next;
 }ItemInfo;
 
