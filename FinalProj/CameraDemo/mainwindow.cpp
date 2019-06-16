@@ -298,9 +298,6 @@ void MainWindow::slot_handleCaputred2(QImage img, ItemInfo *rct)
         {
             QRectF r(it->points[0].x,it->points[2].y,it->points[1].x-it->points[0].x,it->points[3].y-it->points[2].y);
 
-            //scene2->addRect(r,*thepen);
-            //scene2->addEllipse(r,*thepen);
-
             qreal x1,y1,x2,y2;
             r.getCoords(&x1,&y1,&x2,&y2);
             double xscale = (x2-x1);
@@ -329,15 +326,10 @@ void MainWindow::slot_handleCaputred2(QImage img, ItemInfo *rct)
                 tx->setPos(x1+1,y1+12);
                 tx->setDefaultTextColor(Qt::blue);
             }
-            //qDebug() << ratio;
-
-
-
             it = it->next;
         }
         g_img_->CleanItem(rct);
     }
-    //qDebug() << thef.elapsed() <<"ms on ui";
     emit circle_cmd(L1);
     emit square_cmd(L2);
         /*
